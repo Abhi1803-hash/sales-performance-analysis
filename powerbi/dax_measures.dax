@@ -1,0 +1,141 @@
+// =====================================================================
+// dax_measures.dax  |  Date table + measures for the Sales Dashboard
+// Create a table called "_Measures" (Enter Data > empty table) and add
+// each measure below with Modeling > New Measure.
+// =====================================================================
+
+// ---------------------------------------------------------------------
+// 1. DATE TABLE  (Modeling > New Table) → mark as Date Table on [Date]
+// ---------------------------------------------------------------------
+DimDate =
+ADDCOLUMNS (
+    CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) ),
+    "Year",         YEAR ( [Date] ),
+    "Quarter",      "Q" & QUARTER ( [Date] ),
+    "Month No",     MONTH ( [Date] ),
+    "Month",        FORMAT ( [Date], "MMM" ),          // sort by Month No
+    "Year-Month",   FORMAT ( [Date], "YYYY-MM" ),
+    "Weekday",      FORMAT ( [Date], "ddd" ),
+    "Is Weekend",   WEEKDAY ( [Date], 2 ) > 5,
+    "Is Festive",   MONTH ( [Date] ) IN { 10, 11 }
+)
+
+// ---------------------------------------------------------------------
+// 2. BASE MEASURES  (net of returns)
+// ---------------------------------------------------------------------
+Total Revenue =
+CALCULATE ( SUM ( fact_sales[sales_amount] ), fact_sales[is_returned] = FALSE () )
+
+Total Cost =
+CALCULATE ( SUM ( fact_sales[cost_amount] ), fact_sales[is_returned] = FALSE () )
+
+Total Profit = [Total Revenue] - [Total Cost]
+
+Profit Margin % = DIVIDE ( [Total Profit], [Total Revenue] )
+
+Total Orders =
+CALCULATE ( DISTINCTCOUNT ( fact_sales[order_id] ), fact_sales[is_returned] = FALSE () )
+
+Units Sold =
+CALCULATE ( SUM ( fact_sales[quantity] ), fact_sales[is_returned] = FALSE () )
+
+Active Customers =
+CALCULATE ( DISTINCTCOUNT ( fact_sales[customer_id] ), fact_sales[is_returned] = FALSE () )
+
+Avg Order Value = DIVIDE ( [Total Revenue], [Total Orders] )
+
+Avg Discount % =
+CALCULATE ( AVERAGE ( fact_sales[discount_pct] ), fact_sales[is_returned] = FALSE () )
+
+Return Rate % =
+DIVIDE (
+    CALCULATE ( DISTINCTCOUNT ( fact_sales[order_id] ), fact_sales[is_returned] = TRUE () ),
+    DISTINCTCOUNT ( fact_sales[order_id] )
+)
+
+Avg Ship Days = AVERAGE ( fact_sales[ship_days] )
+
+// ---------------------------------------------------------------------
+// 3. TIME INTELLIGENCE  (requires DimDate related to fact_sales[order_date])
+// ---------------------------------------------------------------------
+Revenue PY = CALCULATE ( [Total Revenue], SAMEPERIODLASTYEAR ( DimDate[Date] ) )
+
+Revenue YoY % = DIVIDE ( [Total Revenue] - [Revenue PY], [Revenue PY] )
+
+Revenue YTD = TOTALYTD ( [Total Revenue], DimDate[Date] )
+
+Revenue PM = CALCULATE ( [Total Revenue], DATEADD ( DimDate[Date], -1, MONTH ) )
+
+Revenue MoM % = DIVIDE ( [Total Revenue] - [Revenue PM], [Revenue PM] )
+
+Revenue 3M Rolling Avg =
+DIVIDE (
+    CALCULATE ( [Total Revenue], DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -3, MONTH ) ),
+    3
+)
+
+Profit PY = CALCULATE ( [Total Profit], SAMEPERIODLASTYEAR ( DimDate[Date] ) )
+
+Profit YoY % = DIVIDE ( [Total Profit] - [Profit PY], [Profit PY] )
+
+// ---------------------------------------------------------------------
+// 4. TARGETS & RANKING
+// ---------------------------------------------------------------------
+Sales Target =
+// annual target pro-rated to the number of months in the current filter context
+SUMX (
+    dim_sales_reps,
+    dim_sales_reps[annual_target]
+) * DIVIDE ( DISTINCTCOUNT ( DimDate[Year-Month] ), 12 )
+
+Target Achievement % = DIVIDE ( [Total Revenue], [Sales Target] )
+
+Target Status =
+IF ( [Target Achievement %] >= 1, "✔ Met", "✘ Missed" )
+
+Product Rank =
+RANKX ( ALL ( dim_products[product_name] ), [Total Revenue], , DESC, DENSE )
+
+Rep Rank =
+RANKX ( ALL ( dim_sales_reps[rep_name] ), [Total Revenue], , DESC, DENSE )
+
+Revenue Share % =
+DIVIDE ( [Total Revenue], CALCULATE ( [Total Revenue], ALLSELECTED () ) )
+
+// ---------------------------------------------------------------------
+// 5. CUSTOMER ANALYTICS
+// ---------------------------------------------------------------------
+New Customers =
+VAR _min = MIN ( DimDate[Date] )
+VAR _max = MAX ( DimDate[Date] )
+RETURN
+COUNTROWS (
+    FILTER (
+        VALUES ( fact_sales[customer_id] ),
+        VAR _first = CALCULATE ( MIN ( fact_sales[order_date] ), ALL ( DimDate ) )
+        RETURN _first >= _min && _first <= _max
+    )
+)
+
+Repeat Customers = [Active Customers] - [New Customers]
+
+Repeat Customer % = DIVIDE ( [Repeat Customers], [Active Customers] )
+
+Revenue per Customer = DIVIDE ( [Total Revenue], [Active Customers] )
+
+// ---------------------------------------------------------------------
+// 6. DYNAMIC TITLES & KPI COLOURS (use with conditional formatting)
+// ---------------------------------------------------------------------
+KPI Colour YoY =
+IF ( [Revenue YoY %] >= 0, "#1F4E79", "#C73E1D" )
+
+Margin Colour =
+SWITCH ( TRUE (),
+    [Profit Margin %] < 0,    "#C73E1D",
+    [Profit Margin %] < 0.10, "#F18F01",
+    "#1F4E79"
+)
+
+Dashboard Title =
+"Sales Performance | " &
+IF ( ISFILTERED ( DimDate[Year] ), SELECTEDVALUE ( DimDate[Year], "Multiple years" ), "2024–2025" )

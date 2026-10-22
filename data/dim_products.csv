@@ -1,0 +1,22 @@
+product_id,product_name,category,sub_category,unit_price,unit_cost
+101,Smartphone A1,Electronics,Mobiles,15999,13469.82
+102,Smartphone Pro X,Electronics,Mobiles,42999,35048.93
+103,Feature Phone F2,Electronics,Mobiles,1999,1696.53
+104,Laptop Air 13,Electronics,Laptops,54999,45967.58
+105,Laptop Gamer 15,Electronics,Laptops,89999,70877.29
+106,Chromebook C1,Electronics,Laptops,24999,21450.39
+107,Wireless Earbuds,Electronics,Accessories,2499,2101.39
+108,Power Bank 20k,Electronics,Accessories,1499,1263.48
+109,Smartwatch S3,Electronics,Accessories,4999,3950.46
+110,Office Chair Ergo,Furniture,Chairs,8999,6263.58
+111,Gaming Chair Z,Furniture,Chairs,14999,10344.27
+112,Study Table,Furniture,Tables,5999,4404.11
+113,Dining Table 6S,Furniture,Tables,24999,17787.02
+114,Bookshelf 5T,Furniture,Storage,4499,3265.47
+115,Wardrobe 3D,Furniture,Storage,19999,13908.77
+116,A4 Ream 500,Office Supplies,Paper,349,201.78
+117,Notebook Pack 6,Office Supplies,Paper,299,180.71
+118,Gel Pen Box,Office Supplies,Writing,199,112.46
+119,Marker Set 12,Office Supplies,Writing,249,155.93
+120,Desk Organizer,Office Supplies,Organizers,799,487.82
+121,File Folder Set,Office Supplies,Organizers,399,247.64

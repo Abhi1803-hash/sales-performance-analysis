@@ -1,0 +1,31 @@
+{
+  "name": "Sales Analysis Theme",
+  "dataColors": ["#1F4E79", "#2E86AB", "#F18F01", "#C73E1D", "#6C757D", "#3BB273", "#7768AE", "#E15554"],
+  "background": "#FFFFFF",
+  "foreground": "#1B1B1B",
+  "tableAccent": "#1F4E79",
+  "good": "#3BB273",
+  "neutral": "#F18F01",
+  "bad": "#C73E1D",
+  "maximum": "#1F4E79",
+  "center": "#9DC3E6",
+  "minimum": "#F2F2F2",
+  "textClasses": {
+    "title":   { "fontFace": "Segoe UI Semibold", "fontSize": 14, "color": "#1B1B1B" },
+    "header":  { "fontFace": "Segoe UI Semibold", "fontSize": 12, "color": "#1B1B1B" },
+    "label":   { "fontFace": "Segoe UI", "fontSize": 10, "color": "#444444" },
+    "callout": { "fontFace": "Segoe UI Bold", "fontSize": 26, "color": "#1F4E79" }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "border":     [{ "show": true, "color": { "solid": { "color": "#E5E8EC" } }, "radius": 8 }],
+        "background": [{ "show": true, "color": { "solid": { "color": "#FFFFFF" } } }],
+        "dropShadow": [{ "show": false }]
+      }
+    },
+    "page": {
+      "*": { "background": [{ "color": { "solid": { "color": "#F4F6F9" } }, "transparency": 0 }] }
+    }
+  }
+}
